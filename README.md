@@ -9,6 +9,7 @@ A Node.js and TypeScript backend service that helps discover GitHub users based 
 - Pagination support.
 - Built with TypeScript for type safety.
 - Exposes a RESTful POST endpoint for flexible search queries.
+- **Secure Authentication**: Endpoints are protected using JWT (JSON Web Tokens).
 
 ## Prerequisites
 
@@ -22,11 +23,34 @@ A Node.js and TypeScript backend service that helps discover GitHub users based 
    ```bash
    npm install
    ```
-3. Create a `.env` file in the root directory and add your GitHub Token (optional but recommended for higher rate limits):
+3. Create a `.env` file in the root directory and add the following variables:
    ```
    PORT=3000
    GITHUB_TOKEN=your_github_token
+   SECRET=your_jwt_secret_key
    ```
+   > **Important**: `SECRET` is required for signing and verifying JWT tokens.
+
+## Authentication
+
+The `/search` endpoint is protected and requires a valid JWT token.
+
+### Generating a Token
+Since there is no public login endpoint, you can generate a token for testing using a simple Node.js script.
+
+1. Ensure you have the `SECRET` set in your `.env` file.
+2. Run the following command in your terminal (replacing `your_jwt_secret_key` with your actual secret if testing manually, or rely on the script reading `.env`):
+
+```bash
+node -e "const jwt = require('jsonwebtoken'); const secret = 'your_jwt_secret_key'; console.log(jwt.sign({ user: 'test_user' }, secret));"
+```
+
+### Using the Token
+Include the token in the `Authorization` header of your requests:
+
+```
+Authorization: <your_token_here>
+```
 
 ## Running the Application
 
@@ -54,6 +78,8 @@ Returns a simple message indicating the API is running.
 ### Search Users
 **POST** `/search`
 
+**Authentication Required**: Yes (Header: `Authorization: <token>`)
+
 Allows searching for users with various criteria provided in the JSON body.
 
 **Request Body Parameters:**
@@ -66,6 +92,7 @@ Allows searching for users with various criteria provided in the JSON body.
 ```bash
 curl -X POST http://localhost:3000/search \
   -H "Content-Type: application/json" \
+  -H "Authorization: YOUR_JWT_TOKEN" \
   -d '{
     "query": "tom language:javascript",
     "limit": 5
@@ -75,15 +102,13 @@ curl -X POST http://localhost:3000/search \
 **Example Response:**
 ```json
 {
-  "success": true,
-  "total_count": 1234,
-  "items": [
-    {
-      "login": "tom",
-      "id": 748,
-      ...
-    }
-  ]
+  "status": "success",
+  "message": "Search processed successfully",
+  "meta": { ... },
+  "data": {
+    "total_count": 1234,
+    "items": [ ... ]
+  }
 }
 ```
 
@@ -91,4 +116,10 @@ curl -X POST http://localhost:3000/search \
 - `src/index.ts`: Main entry point.
 - `src/routes`: API route definitions.
 - `src/controllers`: Request handlers.
-- `src/services`: Business logic and external API interactions.
+- `src/services`: Business logic, storage, and external API interactions.
+  - `authService.ts`: JWT authentication middleware.
+  - `responseService.ts`: Standardized response formatting.
+  - `githubService.ts`: GitHub API integration.
+- `src/shared`: Shared utilities and types.
+   - `customErrors.ts`: Error class definitions.
+   - `customInterfaces.ts`: Interface definitions.
