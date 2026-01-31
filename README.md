@@ -10,6 +10,7 @@ A Node.js and TypeScript backend service that helps discover GitHub users based 
 - Built with TypeScript for type safety.
 - Exposes a RESTful POST endpoint for flexible search queries.
 - **Secure Authentication**: Endpoints are protected using JWT (JSON Web Tokens).
+- **Request Validation**: Robust input validation using Zod.
 
 ## Prerequisites
 
@@ -104,11 +105,17 @@ curl -X POST http://localhost:3000/search \
 {
   "status": "success",
   "message": "Search processed successfully",
-  "meta": { ... },
-  "data": {
-    "total_count": 1234,
-    "items": [ ... ]
-  }
+  "meta": {
+    "total_found_on_github": 1234,
+    "query_interpreted": "tom language:javascript"
+  },
+  "data": [
+    {
+      "login": "tom",
+      "id": 748,
+      ...
+    }
+  ]
 }
 ```
 
@@ -123,3 +130,4 @@ curl -X POST http://localhost:3000/search \
 - `src/shared`: Shared utilities and types.
    - `customErrors.ts`: Error class definitions.
    - `customInterfaces.ts`: Interface definitions.
+   - `validators.ts`: Zod schema validations.

@@ -12,3 +12,13 @@ export interface ErrorResponse {
     message: string;
     code: number;
 }
+
+export interface SearchRequest {
+    query: string;
+    limit?: number;
+}
+
+export interface ValidationWarning {
+    param: string;
+    message: string;
+}

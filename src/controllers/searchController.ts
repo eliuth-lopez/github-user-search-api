@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import { searchUsers as searchGithubUsers } from '../services/githubService';
+import { validateSearchRequest } from '../shared/validators';
+import { ErrorResponse, SuccessResponse } from '../services/responseService';
 
 interface SearchBody {
     query: string;
@@ -8,36 +10,20 @@ interface SearchBody {
 
 export const searchUsers = async (req: Request<{}, {}, SearchBody>, res: Response) => {
     try {
-        const { query, limit } = req.body;
-
-        // Validar que al menos un criterio de búsqueda exista
-        if (!query) {
-            res.status(400).json({
-                error: 'Bad Request',
-                message: 'At least one search criteria (query) must be provided'
-            });
-            return;
-        }
+        const { query, limit } = validateSearchRequest(req.body);
 
         const data = await searchGithubUsers({
             q: query,
             per_page: limit || 10
         });
 
-        res.json({
-            success: true,
-            total_count: data.total_count,
-            items: data.items
-        });
+        res.status(200).json(SuccessResponse({
+            total_found_on_github: data.total_count,
+            query_interpreted: query
+        }, data.items));
 
     } catch (error: any) {
-        if (error.response) {
-            res.status(error.response.status).json({
-                error: error.response.statusText,
-                message: error.response.data.message
-            });
-            return;
-        }
-        res.status(500).json({ error: 'Internal Server Error', message: error.message });
+        const result = ErrorResponse(error);
+        res.status(result.code).json(result);
     }
 };
