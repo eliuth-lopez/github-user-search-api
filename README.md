@@ -95,13 +95,16 @@ The API parses the `query` string to extract advanced filters using natural lang
 - **Repositories**: 
   - "more than 10 repos" (or "10+ repos") -> `repos:>10`
   - "few than 50 repos" -> `repos:<50`
+  - "contributor" or "maintainer" -> `repos:>1`
 - **Followers**:
-  - "more than 100 followers" -> `followers:>100`
+  - "more than 100 followers" (or "100+ followers") -> `followers:>100`
   - "few than 500 followers" -> `followers:<500`
 - **Location**: "developer in London", "based in Berlin"
-- **Language**: "javascript developer", "coding in python"
+- **Language**: "javascript developer", "coding in python" (auto-detected from a comprehensive list)
 - **Sponsors**: "sponsored user"
-- **Type**: "organization" or "user"
+- **Type**: 
+  - "organization" or "user"
+  - Roles like "developer", "engineer", "lead", etc. implies `type:user`
 
 
 **Example Request:**
@@ -126,9 +129,10 @@ curl -X POST http://localhost:3000/search \
   },
   "data": [
     {
-      "login": "tom",
-      "id": 748,
-      ...
+      "username": "tom",
+      "url": "https://github.com/tom",
+      "avatar": "https://avatars.githubusercontent.com/u/748?v=4",
+      "score": 1.0
     }
   ]
 }

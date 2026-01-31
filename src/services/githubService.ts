@@ -17,9 +17,6 @@ export const searchUsers = async (queryParams: GithubSearchParams): Promise<Gith
         // Format: q=keyword+qualifier:value
         let q = queryParams.q || '';
 
-        if (queryParams.username) {
-            q += ` ${queryParams.username} in:login`;
-        }
         if (queryParams.location) {
             q += ` location:${queryParams.location}`;
         }

@@ -34,7 +34,14 @@ export const searchUsers = async (req: Request<{}, {}, SearchBody>, res: Respons
         res.status(200).json(SuccessResponse({
             total_found_on_github: data.total_count,
             query_interpreted: data.query_interpreted
-        }, data.items));
+        }, data.items.map((user: any) => {
+            return {
+                username: user.login,
+                url: user.html_url,
+                avatar: user.avatar_url,
+                score: user.score || 0,
+            }
+        })));
 
     } catch (error: any) {
         const result = ErrorResponse(error);
@@ -61,14 +68,15 @@ function parseQuery(query: string): GithubSearchParams {
         query = query.replace(sponsorCapacityMatch[0], '').trim();
     }
 
+
     //earch by number of repositories
-    const repositoriesRegex = /(?:with|few than|more than|\+)?\s*(\d+)\+?\s*repo/i;
+    const repositoriesRegex = /(?:with|few than|more than|\+)?\s*(\d+)(\+)?\s*repo/i;
     const repositoriesMatch = repositoriesRegex.exec(query);
     if (repositoriesMatch) {
         const repositories = repositoriesMatch[1].trim();
         if (repositoriesMatch[0].includes('few than')) {
             queryParts.repos = `<${repositories}`;
-        } else if (repositoriesMatch[0].includes('more than')) {
+        } else if (repositoriesMatch[0].includes('more than') || repositoriesMatch[2] === '+') {
             queryParts.repos = `>${repositories}`;
         } else {
             queryParts.repos = repositories;
@@ -78,11 +86,11 @@ function parseQuery(query: string): GithubSearchParams {
 
 
     // search by followers
-    const followersRegex = /(?:with|few than|more than|\+)?\s*(\d+)\+?\s*followers/i;
+    const followersRegex = /(?:with|few than|more than|\+)?\s*(\d+)(\+)?\s*followers/i;
     const followersMatch = followersRegex.exec(query);
     if (followersMatch) {
         const followers = followersMatch[1].trim();
-        if (followersMatch[0].includes('more than')) {
+        if (followersMatch[0].includes('more than') || followersMatch[2] === '+') {
             queryParts.followers = `>${followers}`;
         } else if (followersMatch[0].includes('few than')) {
             queryParts.followers = `<${followers}`;
@@ -98,25 +106,42 @@ function parseQuery(query: string): GithubSearchParams {
     const locationMatch = locationRegex.exec(query);
     if (locationMatch) {
         const location = locationMatch[1].trim();
-        queryParts.location = location;
+        queryParts.location = location.toLowerCase();
         query = query.replace(locationMatch[0], '').trim();
     }
 
 
     // search language
-    const languages = ['javascript', 'typescript', 'nodejs', 'react', 'angular', 'vue', 'python', 'java', 'c++', 'c#', 'php', 'ruby', 'go', 'rust', 'swift', 'kotlin', 'scala', 'perl', 'bash', 'shell', 'html', 'css', 'sql', 'nosql', 'mongodb', 'mysql', 'postgresql', 'sqlite', 'redis', 'elasticsearch', 'kafka', 'rabbitmq', 'docker', 'kubernetes', 'aws', 'azure', 'gcp', 'linux', 'windows', 'macos', 'android', 'ios', 'flutter', 'react-native', 'ionic', 'cordova', 'vue', 'angular', 'svelte', 'next.js', 'nuxt.js', 'gatsby', 'express', 'koa', 'hapi', 'nestjs', 'django', 'flask', 'fastapi', 'spring', 'laravel', 'rails', 'symfony', 'yii', 'codeigniter', 'zend', 'cakephp', 'fuelphp', 'slim', 'lumen', 'silex', 'monolog', 'twig', 'smarty', 'blade', 'mustache', 'handlebars', 'ejs', 'pug', 'haml', 'slim', 'sass', 'scss', 'less', 'stylus', 'postcss', 'autoprefixer', 'babel', 'webpack', 'rollup', 'parcel', 'esbuild', 'vite', 'grunt', 'gulp', 'bower', 'npm', 'yarn', 'pnpm', 'composer', 'pip', 'nuget', 'maven', 'gradle', 'ant', 'make', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson', 'bazel', 'buck', 'pants', 'scons', 'cmake', 'autotools', 'meson'];
-
+    const languages = [
+        "ActionScript", "Ada", "Agda", "Arduino", "ASP.NET", "Assembly", "Astro", "AutoIt",
+        "Batchfile", "C", "C#", "C++", "Clojure", "CMake", "COBOL", "CoffeeScript",
+        "Common Lisp", "CSS", "Cuda", "D", "Dart", "Dockerfile", "Elixir", "Elm", "Emacs Lisp",
+        "Erlang", "F#", "Fortran", "Go", "GDScript", "GraphQL", "Groovy", "Haskell", "HCL",
+        "HTML", "Java", "JavaScript", "JSON", "Julia", "Jupyter Notebook", "Kotlin", "Less",
+        "LUA", "Makefile", "Markdown", "MATLAB", "Nix", "Objective-C", "OCaml", "Pascal",
+        "Perl", "PHP", "PLpgSQL", "PowerShell", "Prolog", "Protocol Buffer", "Python", "R",
+        "Racket", "Ruby", "Rust", "SAS", "Scala", "Scheme", "SCSS", "Shell", "Solidity",
+        "SQL", "Svelte", "Swift", "Tcl", "Terraform", "TeX", "TypeScript", "VBA", "VHDL",
+        "Verilog", "Visual Basic .NET", "Vue", "WebAssembly", "YAML", "Zig"
+    ]
     languages.forEach(lang => {
+        // escape special characters from language name
         const escapedLang = lang.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        // create regex to match language name
         const langRegex = new RegExp(`\\b${escapedLang}\\b`, 'i');
+
         if (langRegex.test(query)) {
-            queryParts.language = lang;
+            queryParts.language = lang.toLowerCase();
+            // remove language name from query
+            query = query.replace(langRegex, '').trim();
         }
     })
 
     if (/node\.?js/i.test(query)) {
         queryParts.language = 'node';
+        query = query.replace(/node\.?js/i, '').trim();
     }
+
 
     // search by type user
     const typeRegex = /\b(user|organization|org)\b/i;
@@ -127,16 +152,30 @@ function parseQuery(query: string): GithubSearchParams {
         query = query.replace(typeMatch[0], '').trim();
     }
 
-    // search by name or email
-    const userNameRegex = /\b([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|[a-zA-Z0-9._%+-]+)\b/;
-    const userNameMatch = userNameRegex.exec(query);
-    if (userNameMatch) {
-        const userName = userNameMatch[1].trim();
-        queryParts.username = userName;
-        query = query.replace(userNameMatch[0], '').trim();
+
+    // search contributor
+    const contributorRegex = /\b(contributor|maintainer)\b/i;
+    const contributorMatch = contributorRegex.exec(query);
+    if (contributorMatch) {
+        const contributor = contributorMatch[1].trim();
+        queryParts.repos = '>1';
+        query = query.replace(contributor, '').trim();
     }
 
-    queryParts.q = query;
+
+    const roleRegex = /\b(developer|engineer|architect|designer|tester|analyst|consultant|manager|director|lead|principal|senior|junior|entry|level)\b/i;
+    const roleMatch = roleRegex.exec(query);
+    if (roleMatch) {
+        const role = roleMatch[1].trim();
+        queryParts.type = 'user';
+        query = query.replace(role, '').trim();
+    }
+
+    // delete points, plus signs and commas
+    query = query.replace(/[.,+]/g, '').trim();
+
+
+    queryParts.q = query.replace(/\s+/g, ' ').trim();
 
     return queryParts;
 }
