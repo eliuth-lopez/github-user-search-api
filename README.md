@@ -89,6 +89,21 @@ Allows searching for users with various criteria provided in the JSON body.
 
 > **Note**: The `query` parameter is required.
 
+### Natural Language Search
+The API parses the `query` string to extract advanced filters using natural language phrases:
+
+- **Repositories**: 
+  - "more than 10 repos" (or "10+ repos") -> `repos:>10`
+  - "few than 50 repos" -> `repos:<50`
+- **Followers**:
+  - "more than 100 followers" -> `followers:>100`
+  - "few than 500 followers" -> `followers:<500`
+- **Location**: "developer in London", "based in Berlin"
+- **Language**: "javascript developer", "coding in python"
+- **Sponsors**: "sponsored user"
+- **Type**: "organization" or "user"
+
+
 **Example Request:**
 ```bash
 curl -X POST http://localhost:3000/search \

@@ -1,26 +1,12 @@
 import axios from 'axios';
+import { GithubError } from '../shared/customErrors';
+import { GithubSearchParams, GithubSearchResponse } from '../shared/customInterfaces';
 
-const GITHUB_API_URL = 'https://api.github.com';
-
-interface GithubSearchParams {
-    q?: string;
-    username?: string;
-    location?: string;
-    language?: string;
-    per_page?: number | string;
-    page?: number | string;
-}
-
-interface GithubSearchResponse {
-    total_count: number;
-    incomplete_results: boolean;
-    items: any[]; // Using any[] for simplicity, but could be typed further if needed
-}
 
 const getAuthHeader = (): { Authorization?: string } => {
-    const token = process.env.GITHUB_TOKEN;
+    const token = process.env.GITHUB_API_TOKEN;
     if (token) {
-        return { Authorization: `token ${token}` };
+        return { Authorization: `Bearer ${token}` };
     }
     return {};
 };
@@ -41,6 +27,22 @@ export const searchUsers = async (queryParams: GithubSearchParams): Promise<Gith
             q += ` language:${queryParams.language}`;
         }
 
+        if (queryParams.sponsor) {
+            q += ` in:sponsorable`;
+        }
+
+        if (queryParams.repos) {
+            q += ` repos:${queryParams.repos}`;
+        }
+
+        if (queryParams.followers) {
+            q += ` followers:${queryParams.followers}`;
+        }
+
+        if (queryParams.type) {
+            q += ` type:${queryParams.type}`;
+        }
+
         // Clean up query
         q = q.trim();
 
@@ -54,14 +56,13 @@ export const searchUsers = async (queryParams: GithubSearchParams): Promise<Gith
             page: queryParams.page || 1
         };
 
-        const response = await axios.get<GithubSearchResponse>(`${GITHUB_API_URL}/search/users`, {
+        const response = await axios.get<GithubSearchResponse>(`${process.env.GITHUB_API_URL}search/users`, {
             headers: getAuthHeader(),
             params
         });
 
-        return response.data;
+        return { ...response.data, query_interpreted: q };
     } catch (error: any) {
-        console.error('Error in githubService.searchUsers:', error.message);
-        throw error;
+        throw new GithubError('Error in githubService.searchUsers', error);
     }
 };

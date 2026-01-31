@@ -1,7 +1,7 @@
 
 
 import { SuccessResponse, ErrorResponse } from "../shared/customInterfaces";
-import { AuthenticationError } from "../shared/customErrors";
+import { AuthenticationError, GithubError, ValidationError } from "../shared/customErrors";
 
 
 /**
@@ -17,6 +17,26 @@ export function ErrorResponse(error: Error | AuthenticationError): ErrorResponse
             status: "error",
             message: error.message,
             code: 401,
+        }
+    }
+
+
+    if (error instanceof ValidationError) {
+        console.log("Validation Error", error.message)
+        return {
+            status: "error",
+            message: "Invalid request",
+            warnings: error.warnings || [],
+            code: 400,
+        }
+    }
+
+    if (error instanceof GithubError) {
+        console.log("Github Error", error)
+        return {
+            status: "error",
+            message: "Github API error",
+            code: 500,
         }
     }
 

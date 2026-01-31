@@ -5,6 +5,7 @@ import { SearchRequest } from './customInterfaces';
 export const searchRequestValidator = z.object({
     query: z.string(),
     limit: z.number().optional(),
+    page: z.number().optional()
 });
 
 

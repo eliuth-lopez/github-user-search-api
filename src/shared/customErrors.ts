@@ -17,3 +17,11 @@ export class ValidationError extends Error {
     }
 
 }
+
+export class GithubError extends Error {
+    constructor(message: string, error: any) {
+        super(message);
+        this.name = "GithubError";
+        this.stack = error.stack
+    }
+}
